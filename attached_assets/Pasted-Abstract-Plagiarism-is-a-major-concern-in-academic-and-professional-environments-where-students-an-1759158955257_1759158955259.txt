@@ -1,0 +1,92 @@
+Abstract
+Plagiarism is a major concern in academic and professional environments, where students and researchers often submit assignments, reports, and research papers. Detecting plagiarism manually is time-consuming and inefficient. This project proposes the development of an Online Assignment Plagiarism Checker using data mining and text similarity techniques. The system automatically analyzes submitted assignments, extracts textual features, and compares them against a database of previously submitted assignments and online sources. It uses techniques such as cosine similarity, n-gram matching, and semantic analysis to measure similarity scores. The system provides detailed plagiarism reports with highlighted plagiarized content and similarity percentages, ensuring academic integrity and originality in submissions.
+
+Keywords
+Plagiarism Detection, Data Mining, Cosine Similarity, Text Mining, Online Assignment Checker, Natural Language Processing (NLP), Document Similarity.
+
+
+
+
+
+
+I.	Problem Definition
+
+In academic institutions, students often submit assignments that may contain copied content from other students, online resources, or research papers. Existing manual checking methods are inefficient, while traditional plagiarism checkers are expensive and limited.
+The problem is to design and implement a plagiarism detection system that:
+•	Accepts assignment submissions online.
+•	Compares text against multiple sources (local database + web).
+•	Provides a plagiarism percentage and report.
+•	Ensures fast and reliable detection using data mining and text processing techniques.
+
+II.	Process Diagram, System architecture, List of modules, and
+                Functionalities
+
+          Components:
+1.	User Interface Layer – Students upload assignments, faculty view reports.
+2.	Application Layer – Handles preprocessing, text mining, and similarity computation.
+3.	Data Mining Layer – Implements algorithms (cosine similarity, Jaccard index, n-gram).
+4.	Database Layer – Stores submitted assignments, reports, and metadata.
+5.	Report Generation Layer – Produces plagiarism percentage & highlighted report.
+
+     List of Modules & Functionalities:
+1.	User Authentication Module
+o	Login/registration for students & faculty.
+2.	Assignment Upload Module
+o	Supports text, PDF, or DOC formats.
+3.	Preprocessing Module
+o	Removes stopwords, punctuation, converts to lowercase.
+4.	Feature Extraction Module
+o	Uses TF-IDF, word embeddings, or n-grams.
+5.	Similarity Detection Module
+o	Cosine similarity, semantic matching, Jaccard coefficient.
+
+III.	Literature survey
+ 
+1.	Turnitin & Urkund – Widely used plagiarism detection tools but costly and proprietary.
+2.	Research by Potthast et al. (2014) – Focused on text alignment methods for plagiarism detection.
+3.	NLP-based Methods (2020) – Show improvements in semantic plagiarism detection using word embeddings.
+4.	Data Mining Approaches – Techniques like cosine similarity and n-grams are efficient for detecting exact and near-duplicate texts.
+Gaps Identified:
+•	Limited free/open-source tools.
+•	Existing tools struggle with paraphrased content.
+•	Need for low-cost, scalable, academic-friendly systems.
+
+IV.	Objectives
+•  To build a reliable plagiarism detection system using data mining techniques.
+•  To support multiple file formats (DOC, PDF, TXT).
+•  To detect both exact matches and paraphrased content.
+•  To generate detailed plagiarism reports.
+•  To provide a cost-effective and scalable solution for academic use.
+
+V.	Scope of the project
+
+•  Useful for colleges, universities, and research institutions.
+•  Can be extended to detect code plagiarism in programming assignments.
+•  Integration with Learning Management Systems (LMS).
+•  Can evolve with AI & NLP techniques for semantic-level plagiarism detection.
+
+
+VI.	Software and hardware requirements
+
+Software Requirements
+•	Programming Language: Python / Java
+•	Frameworks: Django / Flask / Spring Boot
+•	Libraries: NLTK, Scikit-learn, Gensim, Pandas
+•	Database: MySQL / MongoDB
+•	OS: Windows/Linux
+
+Hardware Requirements
+•	Processor: Intel i5 or above
+•	RAM: 8 GB minimum
+•	Storage: 250 GB HDD/SSD
+•	Internet: Required for web-source checking
+
+
+
+VII.	Expected Outcomes
+
+•	An online platform to upload and check assignments for plagiarism.
+•	Efficient plagiarism detection with similarity percentage.
+•	Reports highlighting copied sections.
+•	Easy-to-use system for students and faculty.
+•	Reduction in academic dishonesty and promotion of original work.

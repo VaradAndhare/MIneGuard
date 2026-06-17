@@ -19,7 +19,7 @@ import {
   computeSimHash,
   documentStore,
   type StoredDocument,
-} from "./simhash";
+} from "./simhash.js";
 import { winnow, compareWithWinnowing, findMatchedPassages } from "./winnowing.js";
 import { randomUUID } from "crypto";
 import Document from "../models/Document.js";

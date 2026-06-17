@@ -1,7 +1,7 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
-import { createServer as createViteServer, createLogger } from "vite.js";
+import { createServer as createViteServer, createLogger } from "vite";
 import viteConfig from "../vite.config.js";
 import { nanoid } from "nanoid";
 const viteLogger = createLogger();

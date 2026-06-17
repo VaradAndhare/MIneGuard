@@ -1,6 +1,6 @@
 import express from "express";
 import { registerRoutes } from "./routes.js";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic, log } from "./vite.js";
 import dotenv from "dotenv";
 import { connectDB } from "./db";
 dotenv.config();

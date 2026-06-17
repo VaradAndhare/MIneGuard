@@ -14,10 +14,10 @@
  *
  * Drop-in replacement for your existing /api/analyze route logic.
  */
-import { computeSimHash, documentStore, } from "./simhash";
-import { winnow, compareWithWinnowing, findMatchedPassages } from "./winnowing";
+import { computeSimHash, documentStore, } from "./simhash.js";
+import { winnow, compareWithWinnowing, findMatchedPassages } from "./winnowing.js";
 import { randomUUID } from "crypto";
-import Document from "../models/Document";
+import Document from "../models/Document.js";
 /**
  * Main entry point. Call this from your /api/analyze route.
  *

@@ -18,11 +18,11 @@ import Tesseract from "tesseract.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 // ── NEW: import our pipeline ──────────────────────────────────────
-import { analyzeDocument, getDetailedComparison, } from "../server/plagarism-engine/pipeline";
-import { documentStore } from "../server/plagarism-engine/simhash";
-import User from "./models/User";
-import Document from "./models/Document";
-import { authMiddleware } from "./middleware/auth";
+import { analyzeDocument, getDetailedComparison, } from "../server/plagarism-engine/pipeline.js";
+import { documentStore } from "../server/plagarism-engine/simhash.js";
+import User from "./models/User.js";
+import Document from "./models/Document.js";
+import { authMiddleware } from "./middleware/auth.js";
 const upload = multer({ dest: "uploads/" });
 const users = [];
 export async function registerRoutes(app) {

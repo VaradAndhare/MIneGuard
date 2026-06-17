@@ -24,11 +24,11 @@ import jwt from "jsonwebtoken";
 import {
   analyzeDocument,
   getDetailedComparison,
-} from "../server/plagarism-engine/pipeline";
-import { documentStore } from "../server/plagarism-engine/simhash";
-import User from "./models/User";
-import Document from "./models/Document";
-import { authMiddleware } from "./middleware/auth";
+} from "../server/plagarism-engine/pipeline.js";
+import { documentStore } from "../server/plagarism-engine/simhash.js";
+import User from "./models/User.js";
+import Document from "./models/Document.js";
+import { authMiddleware } from "./middleware/auth.js";
 
 const upload = multer({ dest: "uploads/" });
 const users: any[] = [];

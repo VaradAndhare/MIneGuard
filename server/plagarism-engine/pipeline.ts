@@ -20,9 +20,9 @@ import {
   documentStore,
   type StoredDocument,
 } from "./simhash";
-import { winnow, compareWithWinnowing, findMatchedPassages } from "./winnowing";
+import { winnow, compareWithWinnowing, findMatchedPassages } from "./winnowing.js";
 import { randomUUID } from "crypto";
-import Document from "../models/Document";
+import Document from "../models/Document.js";
 
 export interface AnalysisMatch {
   id: string;

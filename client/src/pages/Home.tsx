@@ -1,169 +1,208 @@
+/**
+ * Home.tsx  —  UPDATED
+ * ----------------------
+ * Changes:
+ *  - Stores extracted uploadedText in state so "View Details" can call /api/compare
+ *  - Passes documentId from analysis response to match IDs
+ *  - Wires onViewDetails → fetches /api/compare/:id → shows TextComparison
+ *  - Shows database size from response
+ *  - All other UI (DocumentUpload, AnalysisProgress, PlagiarismReport) unchanged
+ */
+
 import { useState } from "react";
 import DocumentUpload from "@/components/DocumentUpload";
-import PlagiarismReport from "@/components/PlagiarismReport";
 import AnalysisProgress from "@/components/AnalysisProgress";
+import PlagiarismReport from "@/components/PlagiarismReport";
 import TextComparison from "@/components/TextComparison";
+import Sidebar from "@/components/Sidebar";
 
-type AppState = 'upload' | 'analyzing' | 'results' | 'comparison';
+interface ReportData {
+  fileName: string;
+  overallSimilarity: number;
+  wordCount: number;
+  matches: any[];
+  processingTime: number;
+  documentId: string;
+  databaseSize: number;
+}
 
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  content?: string;
+interface ComparisonData {
+  originalSegments: any[];
+  sourceSegments: any[];
+  sourceName: string;
+  similarity: number;
 }
 
 export default function Home() {
-  const [currentState, setCurrentState] = useState<AppState>('upload');
-  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
-  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [stage, setStage] = useState<
+    "upload" | "analyzing" | "report" | "comparison"
+  >("upload");
+  const [currentFileName, setCurrentFileName] = useState("");
+  const [uploadedText, setUploadedText] = useState<string>(""); // NEW: store raw text
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [comparisonData, setComparisonData] = useState<ComparisonData | null>(
+    null,
+  );
 
-  // TODO: remove mock functionality
-  const mockMatches = [
-    {
-      id: '1',
-      source: 'wikipedia.org/wiki/Academic_integrity',
-      similarity: 87,
-      matchedText: 'Academic integrity is the pursuit of scholarly activity in an open, honest and responsible manner. It encompasses honesty, fairness, respect, and responsibility.',
-      sourceType: 'web' as const
-    },
-    {
-      id: '2', 
-      source: 'Previous submission - Sarah Johnson (2023)',
-      similarity: 45,
-      matchedText: 'The importance of original research cannot be overstated in academic environments. Students must demonstrate critical thinking skills.',
-      sourceType: 'submission' as const
-    },
-    {
-      id: '3',
-      source: 'Journal of Educational Ethics, Vol. 15',
-      similarity: 23,
-      matchedText: 'Students must demonstrate original thinking and proper citation practices to maintain academic standards.',
-      sourceType: 'database' as const
+  // ── Called when user clicks "Check for Plagiarism" ──────────────
+  const handleAnalyze = async (file: any) => {
+    setCurrentFileName(file.name);
+    setStage("analyzing");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file.content);
+
+      const token = localStorage.getItem("token");
+
+      const endpoint = file.type.startsWith("image")
+        ? "/api/image-check"
+        : "/api/analyze";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      const data = await response.json();
+
+      // Store the raw text for later use in /api/compare
+      // (For text files we can read it client-side; for PDF/OCR the server handles it)
+      if (file.type === "text/plain" && file.content) {
+        const text = await file.content.text();
+        setUploadedText(text);
+      }
+
+      setReportData({
+        fileName: file.name,
+        overallSimilarity: data.similarity ?? 0,
+        wordCount: data.words ?? 0,
+        matches: data.matches ?? [],
+        processingTime: parseFloat(data.processingTime ?? "0"),
+        documentId: data.documentId ?? "",
+        databaseSize: data.databaseSize ?? 0,
+      });
+
+      setStage("report");
+    } catch (err) {
+      console.error("❌ Analysis failed:", err);
+      setStage("upload");
     }
-  ];
-
-  const mockOriginalText = [
-    { text: 'Academic integrity is the pursuit of scholarly activity in an open, honest and responsible manner. ', isHighlighted: true, similarityLevel: 'exact' as const },
-    { text: 'It encompasses honesty, fairness, respect, and responsibility in all academic work. ', isHighlighted: true, similarityLevel: 'exact' as const },
-    { text: 'Students must demonstrate original thinking ', isHighlighted: false, similarityLevel: 'exact' as const },
-    { text: 'and proper citation practices ', isHighlighted: true, similarityLevel: 'similar' as const },
-    { text: 'in their research work. Original contributions are essential ', isHighlighted: false, similarityLevel: 'exact' as const },
-    { text: 'for advancing academic discourse and knowledge creation. ', isHighlighted: true, similarityLevel: 'paraphrased' as const }
-  ];
-
-  const mockSourceText = [
-    { text: 'Academic integrity is the pursuit of scholarly activity in an open, honest and responsible manner. ', isHighlighted: true, similarityLevel: 'exact' as const },
-    { text: 'It encompasses honesty, fairness, respect, and responsibility in educational settings. ', isHighlighted: true, similarityLevel: 'exact' as const },
-    { text: 'Researchers must show creative thinking ', isHighlighted: false, similarityLevel: 'exact' as const },
-    { text: 'and appropriate referencing methods ', isHighlighted: true, similarityLevel: 'similar' as const },
-    { text: 'throughout their scholarly activities. Novel ideas are crucial ', isHighlighted: false, similarityLevel: 'exact' as const },
-    { text: 'for the progression of academic conversation and research development. ', isHighlighted: true, similarityLevel: 'paraphrased' as const }
-  ];
-
-  const handleFileUpload = (file: UploadedFile) => {
-    setUploadedFile(file);
-    console.log('File uploaded:', file.name);
   };
 
-  const handleAnalyzeClick = (file: UploadedFile) => {
-    console.log('Starting analysis for:', file.name);
-    setCurrentState('analyzing');
+  // ── Called when user clicks "View Details" on a match ──────────
+  const handleViewDetails = async (matchId: string) => {
+    if (!uploadedText || !matchId) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`/api/compare/${matchId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ uploadedText }),
+      });
+
+      if (!response.ok) {
+        console.warn("Comparison not available:", await response.text());
+        return;
+      }
+
+      const data = await response.json();
+      console.log(data);
+      setComparisonData(data);
+      setStage("comparison");
+    } catch (err) {
+      console.error("❌ Comparison fetch failed:", err);
+    }
   };
 
+  // ── Analysis progress auto-complete ─────────────────────────────
   const handleAnalysisComplete = () => {
-    console.log('Analysis completed');
-    setCurrentState('results');
-  };
-
-  const handleViewDetails = (matchId: string) => {
-    console.log('View details for match:', matchId);
-    setSelectedMatchId(matchId);
-    setCurrentState('comparison');
-  };
-
-  const handleBackToReport = () => {
-    console.log('Back to report');
-    setCurrentState('results');
-    setSelectedMatchId(null);
-  };
-
-  const handleNewUpload = () => {
-    console.log('Starting new upload');
-    setCurrentState('upload');
-    setUploadedFile(null);
-    setSelectedMatchId(null);
-  };
-
-  const getCurrentMatch = () => {
-    return mockMatches.find(match => match.id === selectedMatchId);
+    // Progress animation finished — report data already set above
   };
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-6xl">
-      {currentState === 'upload' && (
-        <div className="space-y-8">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight">
-              Advanced Plagiarism Detection
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Upload your document and get comprehensive plagiarism analysis using 
-              advanced data mining techniques including cosine similarity and TF-IDF vectorization.
+    <div className="container mx-auto px-6 py-8 max-w-4xl">
+      {/* ── UPLOAD STAGE ── */}
+      {stage === "upload" && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-semibold mb-1">
+              Check for Plagiarism
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Powered by Winnowing fingerprinting + SimHash LSH — the same core
+              technique used by MOSS and Turnitin.
             </p>
           </div>
-          <DocumentUpload 
-            onFileUpload={handleFileUpload}
-            onAnalyzeClick={handleAnalyzeClick}
+          <DocumentUpload
+            onFileUpload={() => {}}
+            onAnalyzeClick={handleAnalyze}
           />
         </div>
       )}
 
-      {currentState === 'analyzing' && uploadedFile && (
-        <div className="max-w-2xl mx-auto">
-          <AnalysisProgress 
-            fileName={uploadedFile.name}
-            isAnalyzing={true}
-            onComplete={handleAnalysisComplete}
-          />
-        </div>
-      )}
-
-      {currentState === 'results' && uploadedFile && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Plagiarism Analysis Results</h2>
-            <button 
-              onClick={handleNewUpload}
-              className="text-primary hover:underline"
-              data-testid="link-new-analysis"
-            >
-              New Analysis
-            </button>
-          </div>
-          <PlagiarismReport
-            fileName={uploadedFile.name}
-            overallSimilarity={32}
-            wordCount={2847}
-            uniqueWords={1923}
-            matches={mockMatches}
-            onViewDetails={handleViewDetails}
-            processingTime={3.7}
-          />
-        </div>
-      )}
-
-      {currentState === 'comparison' && selectedMatchId && (
-        <TextComparison
-          originalText={mockOriginalText}
-          sourceText={mockSourceText}
-          sourceName={getCurrentMatch()?.source || ''}
-          sourceType={getCurrentMatch()?.sourceType || 'web'}
-          overallSimilarity={getCurrentMatch()?.similarity || 0}
-          onBack={handleBackToReport}
+      {/* ── ANALYZING STAGE ── */}
+      {stage === "analyzing" && (
+        <AnalysisProgress
+          fileName={currentFileName}
+          isAnalyzing={true}
+          onComplete={handleAnalysisComplete}
         />
       )}
-    </main>
+
+      {/* ── REPORT STAGE ── */}
+      {stage === "report" && reportData && (
+        <div className="space-y-4">
+          {/* Database size badge */}
+          {reportData.databaseSize > 0 && (
+            <p className="text-xs text-muted-foreground text-right">
+              Compared against {reportData.databaseSize} document
+              {reportData.databaseSize !== 1 ? "s" : ""} in database
+            </p>
+          )}
+
+          <PlagiarismReport
+            fileName={reportData.fileName}
+            overallSimilarity={reportData.overallSimilarity}
+            wordCount={reportData.wordCount}
+            matches={reportData.matches}
+            processingTime={reportData.processingTime}
+            onViewDetails={handleViewDetails}
+          />
+
+          <div className="flex justify-center pt-2">
+            <button
+              onClick={() => {
+                setStage("upload");
+                setReportData(null);
+                setUploadedText("");
+              }}
+              className="text-sm text-muted-foreground underline"
+            >
+              Check another document
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── COMPARISON STAGE ── */}
+      {stage === "comparison" && comparisonData && (
+        <TextComparison
+          originalText={comparisonData.originalSegments}
+          sourceText={comparisonData.sourceSegments}
+          sourceName={comparisonData.sourceName}
+          sourceType="submission"
+          overallSimilarity={comparisonData.similarity}
+          onBack={() => setStage("report")}
+        />
+      )}
+    </div>
   );
 }

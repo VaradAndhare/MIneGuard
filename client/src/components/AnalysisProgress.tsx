@@ -112,15 +112,32 @@ export default function AnalysisProgress({ fileName, onComplete, isAnalyzing = f
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Overall Progress</span>
-            <span className="font-medium" data-testid="text-overall-progress">
-              {Math.round(overallProgress)}%
-            </span>
-          </div>
-          <Progress value={overallProgress} className="h-3" data-testid="progress-overall" />
-        </div>
+        <div className="relative overflow-hidden rounded-lg border p-6 bg-muted/30">
+
+  {/* 🤖 AI SCANNING LIGHT */}
+  <div className="absolute inset-0 pointer-events-none">
+    <div className="scan-line"></div>
+  </div>
+
+  <div className="space-y-4 relative z-10">
+    <h3 className="text-lg font-semibold text-center">
+      🤖 AI is analyzing your file...
+    </h3>
+
+    <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+      <div
+        className="h-full bg-primary transition-all duration-500"
+        style={{ width: `${overallProgress}%` }}
+      />
+    </div>
+
+    <p className="text-sm text-muted-foreground text-center animate-pulse">
+      Running TF-IDF • Cosine Similarity • Image Intelligence
+    </p>
+  </div>
+
+</div>
+
         
         <div className="space-y-4">
           {steps.map((step, index) => (
